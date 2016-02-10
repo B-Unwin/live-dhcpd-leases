@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 now = datetime.now()
 written = 0
 with open('leases.txt', mode='w') as b_file:
@@ -16,13 +17,21 @@ with open('leases.txt', mode='w') as b_file:
 			if a_line[:17] == '  client-hostname':
 				client = a_line[19:-3]
 				if end > now:
-					line = lease+starts+' '+ends+' '+hardware+' '+client+'\n'
+					if os.system('sudo ping -c 1 -w 3 10.227.99.65') == 0:
+						response = 'Responding!'
+					else:
+						response = 'No Response'
+					line = lease+starts+' '+ends+' '+hardware+' '+response+' '+client+'\n'
 					b_file.write(line)
 					written = 1
 			elif a_line[:1] == '}':
 				if written == 0:
 					if end > now:
-						line = lease+starts+' '+ends+' '+hardware+'\n'
+						if os.system('sudo ping -c 1 -w 3 10.227.99.65') == 0:
+							response = 'Responding!'
+						else:
+							response = 'No Response'
+						line = lease+starts+' '+ends+' '+hardware+' '+response+'\n'
 						b_file.write(line)
 				written = 0
 with open('leases.txt', mode='r') as c_file:
