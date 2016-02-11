@@ -1,5 +1,7 @@
 from datetime import datetime
 import os
+import os.path
+import pickle
 now = datetime.now()
 written = 0
 def ping(ip):
@@ -9,6 +11,11 @@ def ping(ip):
 	else:
 		response = 'No Response'
 	return response
+if os.path.isfile('clients.pickle') == 1:
+	with open('clients.pickle', 'rb') as handle:
+		clients = pickle.load(handle)
+else:
+	clients = {}
 with open('leases.txt', mode='w') as b_file:
 	with open('/var/lib/dhcp/dhcpd.leases', mode='r') as a_file:
 		for a_line in a_file:
@@ -25,16 +32,23 @@ with open('leases.txt', mode='w') as b_file:
 				client = a_line[19:-3]
 				if end > now:
 					response = ping(lease)
-					line = lease+starts+' '+ends+' '+hardware+' '+response+' '+client+'\n'
+					clients[hardware] = client
+					line = lease+starts+' '+ends+' '+hardware+' '+response+' '+client+' (live)'+'\n'
 					b_file.write(line)
 					written = 1
 			elif a_line[:1] == '}':
 				if written == 0:
 					if end > now:
 						response = ping(lease)
-						line = lease+starts+' '+ends+' '+hardware+' '+response+'\n'
+						if hardware in clients:
+							client = clients[hardware]
+							line = lease+starts+' '+ends+' '+hardware+' '+response+' '+client+' (saved)'+'\n'
+						else:
+							line = lease+starts+' '+ends+' '+hardware+' '+response+'\n'
 						b_file.write(line)
 				written = 0
+with open('clients.pickle', 'wb') as handle:
+  pickle.dump(clients, handle)
 with open('leases.txt', mode='r') as c_file:
 	for b_line in c_file:
 		print (b_line)
