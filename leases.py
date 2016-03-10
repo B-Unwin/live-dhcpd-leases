@@ -83,32 +83,25 @@ with open('/var/lib/dhcp/dhcpd.leases', mode='r') as a_file:
 		newline = 1
 		if lease == None:
 			lease = find_lease(a_line)
-			newline = 0
-		else:
-			if starts == None:
-				if newline == 1:
-					starts = find_start(a_line, lease)
-					newline = 0
+			continue
+		elif starts == None:
+			starts = find_start(a_line, lease)
+			continue
+		elif ends == None:
+			ends = find_end(a_line, lease)
+			if ends == 0:
+				lease = None
+				starts = None
+				ends = None
+			continue
+		elif lease in leases:
+			if MAC == None:
+				MAC = find_mac(a_line, lease)
+				continue
 			else:
-				if ends == None:
-					if newline == 1:
-						ends = find_end(a_line, lease)
-						if ends == 0:
-							lease = None
-							starts = None
-							ends = None
-						newline = 0
-				else:
-					if lease in leases:
-						if MAC == None:
-							if newline == 1:
-								MAC = find_mac(a_line, lease)
-								newline = 0
-						else:
-							if client == None:
-								if newline == 1:
-									client = find_client(a_line, lease, MAC)
-									newline = 0
+				if client == None:
+					client = find_client(a_line, lease, MAC)
+					continue
 		if a_line[:1] == '}':	
 			if lease in leases:
 				if len(leases[lease])<4:
@@ -150,3 +143,4 @@ if args.summary:
 			print('VLAN %s has %s active leases.' % (sub_network, VLAN[sub_network][0]))
 with open('clients.pickle', 'wb') as handle:
 	pickle.dump(clients, handle)
+
